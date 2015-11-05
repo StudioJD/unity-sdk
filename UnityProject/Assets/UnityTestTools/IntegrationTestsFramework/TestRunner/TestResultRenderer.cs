@@ -35,8 +35,7 @@ public class TestResultRenderer
     public void ShowResults()
     {
         m_ShowResults = true;
-		// COTC
-//		Screen.lockCursor = false;
+        Cursor.visible = true;
     }
 
     public void AddResults(string sceneName, ITestResult result)

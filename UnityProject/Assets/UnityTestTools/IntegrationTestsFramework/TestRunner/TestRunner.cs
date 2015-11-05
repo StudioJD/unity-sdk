@@ -7,12 +7,14 @@ using System.Linq;
 using System.Reflection;
 using UnityEngine;
 using UnityTest.IntegrationTestRunner;
+using System.IO;
 
 namespace UnityTest
 {
     [Serializable]
     public class TestRunner : MonoBehaviour
     {
+        static private int TestSceneNumber = 0;
         static private readonly TestResultRenderer k_ResultRenderer = new TestResultRenderer();
 
         public TestComponent currentTest;
@@ -83,9 +85,7 @@ namespace UnityTest
 
         public void InitRunner(List<TestComponent> tests, List<string> dynamicTestsToRun)
         {
-            m_CurrentlyRegisteredLogCallback = GetLogCallbackField();
-            m_LogCallback = LogHandler;
-            Application.RegisterLogCallback(m_LogCallback);
+            Application.logMessageReceived += LogHandler;
 
             // Init dynamic tests
             foreach (var typeName in dynamicTestsToRun)
@@ -140,7 +140,6 @@ namespace UnityTest
                 m_ReadyToRun = false;
                 StartCoroutine("StateMachine");
             }
-            LogCallbackStillRegistered();
         }
 
         public void OnDestroy()
@@ -157,7 +156,7 @@ namespace UnityTest
                 var remainingTests = m_TestsProvider.GetRemainingTests();
                 TestRunnerCallback.TestRunInterrupted(remainingTests.ToList());
             }
-            Application.RegisterLogCallback(null);
+            Application.logMessageReceived -= LogHandler;
         }
 
         private void LogHandler(string condition, string stacktrace, LogType type)
@@ -225,15 +224,15 @@ namespace UnityTest
                 {
                     if (m_TestState == TestState.Running)
                     {
-						if(currentTest.ShouldSucceedOnAssertions())
-						{
-							var assertionsToCheck = currentTest.gameObject.GetComponentsInChildren<AssertionComponent>().Where(a => a.enabled).ToArray();
-							if (assertionsToCheck.Any () && assertionsToCheck.All(a => a.checksPerformed > 0))
-	                        {
-	                            IntegrationTest.Pass(currentTest.gameObject);
-	                            m_TestState = TestState.Success;
-	                        }
-						}
+                        if(currentTest.ShouldSucceedOnAssertions())
+                        {
+                            var assertionsToCheck = currentTest.gameObject.GetComponentsInChildren<AssertionComponent>().Where(a => a.enabled).ToArray();
+                            if (assertionsToCheck.Any () && assertionsToCheck.All(a => a.checksPerformed > 0))
+                            {
+                                IntegrationTest.Pass(currentTest.gameObject);
+                                m_TestState = TestState.Success;
+                            }
+                        }
                         if (currentTest != null && Time.time > m_StartTime + currentTest.GetTimeout())
                         {
                             m_TestState = TestState.Timeout;
@@ -305,10 +304,15 @@ namespace UnityTest
         {
             if (isInitializedByRunner) return;
 
-            if (Application.loadedLevel < Application.levelCount - 1)
-                Application.LoadLevel(Application.loadedLevel + 1);
+
+            TestSceneNumber += 1;
+            string testScene = m_Configurator.GetIntegrationTestScenes (TestSceneNumber);
+
+            if (testScene != null)
+                Application.LoadLevel(Path.GetFileNameWithoutExtension(testScene));
             else
             {
+                TestRunnerCallback.AllScenesFinished();
                 k_ResultRenderer.ShowResults();
                 if (m_Configurator.isBatchRun && m_Configurator.sendResultsOverNetwork)
                     Application.Quit();
@@ -403,35 +407,6 @@ namespace UnityTest
 #endif  // if !UNITY_METRO
         }
 
-        #endregion
-
-        #region LogCallback check
-        private Application.LogCallback m_LogCallback;
-        private FieldInfo m_CurrentlyRegisteredLogCallback;
-
-        public void LogCallbackStillRegistered()
-        {
-            if (Application.platform == RuntimePlatform.OSXWebPlayer
-                || Application.platform == RuntimePlatform.WindowsWebPlayer)
-                return;
-            if (m_CurrentlyRegisteredLogCallback == null) return;
-            var v = (Application.LogCallback)m_CurrentlyRegisteredLogCallback.GetValue(null);
-            if (v == m_LogCallback) return;
-            Debug.LogError("Log callback got changed. This may be caused by other tools using RegisterLogCallback.");
-            Application.RegisterLogCallback(m_LogCallback);
-        }
-
-        private FieldInfo GetLogCallbackField()
-        {
-#if !UNITY_METRO
-            var type = typeof(Application);
-            var f = type.GetFields(BindingFlags.Static | BindingFlags.NonPublic).Where(p => p.Name == "s_LogCallback");
-            if (f.Count() != 1) return null;
-            return f.Single();
-#else
-            return null;
-#endif
-        }
         #endregion
 
         enum TestState
