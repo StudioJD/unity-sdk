@@ -1574,6 +1574,7 @@
             <returns>Promise resolved when the operation has completed.</returns>
             <param name="key">The name of the key to remove.</param>
         </member>
+        <!-- Badly formed XML comment ignored for member "T:CotcSdk.NonpagedList`1" -->
         <member name="T:CotcSdk.PagedList`1">
             @ingroup main_classes
             <summary>Represents a paginated list, which allows for easy navigation through multiple results.</summary>
