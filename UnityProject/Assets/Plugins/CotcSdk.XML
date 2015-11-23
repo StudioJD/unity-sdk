@@ -562,6 +562,9 @@
                  the message will be queued and transmitted the next time the domain event loop is started.</param>
              <param name="notification">Push notification to send to the recipient player if not currently active.</param>
         </member>
+        <member name="T:CotcSdk.FriendRelationshipStatus">
+            <summary>Status of friend relationship.</summary>
+        </member>
         <member name="T:CotcSdk.FriendStatusChangeEvent">
             <summary>Event triggered when someone adds this gamer as a friend or changes his friendship status.</summary>
         </member>
@@ -1688,6 +1691,9 @@
             </summary>
         </member>
         <!-- Badly formed XML comment ignored for member "T:CotcSdk.Bundle" -->
+        <member name="T:CotcSdk.Bundle.DataType">
+            <summary>Possible types of data storable into a bundle.</summary>
+        </member>
         <member name="M:CotcSdk.Bundle.CreateObject">
             <summary>Creates a bundle of type object. You may also pass up to three key/value pairs (in this order),
             which will be put in the object initially.</summary>
@@ -1738,6 +1744,9 @@
         </member>
         <member name="M:CotcSdk.IHttpClient.Terminate">
             <summary>Should abort all requests.</summary>
+        </member>
+        <member name="T:CotcSdk.LogLevel">
+            <summary>Possible logging levels to be set.</summary>
         </member>
         <member name="T:CotcSdk.UnityHttpClient.RequestState">
             <summary>Asynchronous request state.</summary>
