@@ -116,11 +116,13 @@
     <Compile Include="Libs\LitJson\JsonWriter.cs" />
     <Compile Include="Libs\LitJson\Lexer.cs" />
     <Compile Include="Libs\LitJson\ParserToken.cs" />
+    <Compile Include="PlatformSpecific\HttpClient.cs" />
     <Compile Include="PlatformSpecific\Interfaces\IHttpClient.cs" />
     <Compile Include="PlatformSpecific\Interfaces\ILogger.cs" />
     <Compile Include="PlatformSpecific\Interfaces\ISystemFunctions.cs" />
     <Compile Include="PlatformSpecific\Managers.cs" />
-    <Compile Include="PlatformSpecific\Unity\UnityHttpClient.cs" />
+    <Compile Include="PlatformSpecific\Unity\UnityHttpClientV2.cs" />
+    <Compile Include="PlatformSpecific\Unity\MonoHttpClient.cs" />
     <Compile Include="PlatformSpecific\Unity\UnityLogger.cs" />
     <Compile Include="PlatformSpecific\Unity\UnitySystemFunctions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

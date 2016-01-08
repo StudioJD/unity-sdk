@@ -29,7 +29,7 @@ namespace CotcSdk
 			public Stream StreamResponse;
 			private MonoHttpClient self;
 
-			public RequestState(MonoHttpClient inst, HttpRequest originalReq, HttpWebRequest req, object previousUserData, int requestId) {
+            public RequestState(MonoHttpClient inst, HttpRequest originalReq, HttpWebRequest req, object previousUserData, int requestId) : base(inst, originalReq) {
 				self = inst;
 				BufferRead = new byte[BufferSize];
 				OriginalRequest = originalReq;
