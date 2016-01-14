@@ -10,7 +10,6 @@ namespace CotcSdk {
 	 * Better HTTP client based on UnityEngine.Experimental.Networking.UnityWebRequest.
 	 */
 	internal class UnityHttpClientV2 : HttpClient {
-		private int RequestCount = 0;
 
 		/// <summary>Asynchronous request state.</summary>
 		private class UnityRequest : WebRequest {
@@ -20,7 +19,7 @@ namespace CotcSdk {
 			private UnityWebRequest Request;
 			private bool WasAborted = false;
 
-            public UnityRequest(UnityHttpClientV2 inst, string url, HttpRequest request, object previousUserData, int requestId) : base(inst, request) {
+			public UnityRequest(UnityHttpClientV2 inst, string url, HttpRequest request, object previousUserData, int requestId) : base(inst, request) {
 				self = inst;
 				OriginalRequest = request;
 				RequestId = requestId;
@@ -53,11 +52,11 @@ namespace CotcSdk {
 
 			/// <summary>Prints the current request for user convenience.</summary>
 			internal void LogRequest() {
-				if (!self.VerboseMode) { return; }
+				if (!VerboseMode) { return; }
 
 				StringBuilder sb = new StringBuilder();
 				sb.AppendLine("[" + RequestId + "] " + Request.method + "ing on " + Request.url);
-				sb.AppendLine("Headers:");
+				sb.AppendLine("Headers (Unity):");
 				foreach (var pair in OriginalRequest.Headers) {
 					sb.AppendLine("\t" + pair.Key + ": " + pair.Value);
 				}
@@ -69,7 +68,7 @@ namespace CotcSdk {
 
 			/// <summary>Prints information about the response for debugging purposes.</summary>
 			internal void LogResponse(HttpResponse response) {
-				if (!self.VerboseMode) { return; }
+				if (!VerboseMode) { return; }
 
 				StringBuilder sb = new StringBuilder();
 				sb.AppendLine("[" + RequestId + "] " + response.StatusCode + " on " + Request.method + "ed on " + Request.url);

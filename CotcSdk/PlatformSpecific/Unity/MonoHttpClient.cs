@@ -16,7 +16,6 @@ namespace CotcSdk
 	 */
 	internal class MonoHttpClient : HttpClient {
 		private const int ConcurrentHttpRequestLimit = 100;
-		private int RequestCount = 0;
 
 		/// <summary>Asynchronous request state.</summary>
 		private class RequestState: WebRequest {
@@ -29,7 +28,7 @@ namespace CotcSdk
 			public Stream StreamResponse;
 			private MonoHttpClient self;
 
-            public RequestState(MonoHttpClient inst, HttpRequest originalReq, HttpWebRequest req, object previousUserData, int requestId) : base(inst, originalReq) {
+			public RequestState(MonoHttpClient inst, HttpRequest originalReq, HttpWebRequest req, object previousUserData, int requestId) : base(inst, originalReq) {
 				self = inst;
 				BufferRead = new byte[BufferSize];
 				OriginalRequest = originalReq;
@@ -48,12 +47,12 @@ namespace CotcSdk
 
 			/// <summary>Prints the current request for user convenience.</summary>
 			internal void LogRequest() {
-				if (!self.VerboseMode) { return; }
+				if (!VerboseMode) { return; }
 
 				StringBuilder sb = new StringBuilder();
 				HttpWebRequest request = Request;
 				sb.AppendLine("[" + RequestId + "] " + request.Method + "ing on " + request.RequestUri);
-				sb.AppendLine("Headers:");
+				sb.AppendLine("Headers (Mono):");
 				foreach (string key in request.Headers) {
 					sb.AppendLine("\t" + key + ": " + request.Headers[key]);
 				}
@@ -65,7 +64,7 @@ namespace CotcSdk
 
 			/// <summary>Prints information about the response for debugging purposes.</summary>
 			internal void LogResponse(HttpResponse response) {
-				if (!self.VerboseMode) { return; }
+				if (!VerboseMode) { return; }
 
 				StringBuilder sb = new StringBuilder();
 				HttpWebRequest req = Request;

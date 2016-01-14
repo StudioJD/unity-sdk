@@ -259,7 +259,7 @@
             </summary>
             <returns>Whether the server response is considered as failed</returns>
         </member>
-        <member name="M:CotcSdk.Common.RunRequest``1(CotcSdk.HttpRequest,CotcSdk.Promise{``0},System.Action{CotcSdk.HttpResponse})">
+        <member name="M:CotcSdk.Common.RunRequest``1(CotcSdk.HttpRequest,CotcSdk.Promise{``0},System.Action{CotcSdk.HttpResponse},CotcSdk.HttpClient)">
             <summary>
             Wrapper around our standard work on Managers.HttpClient.Run. Automatically notifies the passed handler
             of a failure.
@@ -268,6 +268,7 @@
             <param name="task">Task that is resolved in case of failure, else the onSuccess callback is called and you'll
                 have to resolve it from inside.</param>
             <param name="onSuccess">Callback called in case of success only.</param>
+            <param name="forceClient">Leave it to null, unless you really need a special HTTP client to be used.</param>
         </member>
         <member name="M:CotcSdk.Common.RunInTask``1(CotcSdk.HttpRequest,System.Action{CotcSdk.HttpResponse,CotcSdk.Promise{``0}})">
             <summary>
@@ -1770,6 +1771,21 @@
         </member>
         <member name="T:CotcSdk.LogLevel">
             <summary>Possible logging levels to be set.</summary>
+        </member>
+        <member name="P:CotcSdk.Managers.HttpClient">
+            <summary>
+            Designates the HTTP default client, as selected by the user (by calling SetHttpClientType, or
+            publicly via the CotC game object settings or Cloud Setup).
+            </summary>
+        </member>
+        <member name="P:CotcSdk.Managers.UnityHttpClient">
+            <summary>Allows to specifically direct a request to the Unity HTTP Client, while using the
+            default client for other requests. (The two can run in parallel).</summary>
+        </member>
+        <member name="M:CotcSdk.Managers.SetHttpClientParams(System.Int32,System.Boolean)">
+            <summary>Defines the type of HTTP client./// </summary>
+            <param name="type">0 = HttpWebRequest, 1 = UnityWebRequest.</param>
+            <param name="verboseMode">true to enable verbose logging of every request, false otherwise.</param>
         </member>
         <member name="T:CotcSdk.UnityHttpClientV2">
             Better HTTP client based on UnityEngine.Experimental.Networking.UnityWebRequest.
