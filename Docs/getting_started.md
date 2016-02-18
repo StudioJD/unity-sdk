@@ -22,9 +22,23 @@ Note: if you include any package which provides additional functionality, you ne
 
 ![Import package screen](./Docs/img/importpackage02.png)
 
+# Configuring
+
+Basic usage is provided by the Clan of the Cloud SDK prefab object. You just have to put it on your scene(s). When creating your project, you can select this object (any instance on any scene) and use the interface under the inspector to set up the CotC credentials as shown below. These credentials identify your game and are used to scope data to your game. You may also configure additional settings.
+
+![Configuring the SDK via the CotC Game Object](./Docs/img/cotc-game-object-1.png)
+
+The available settings are:
+- **API Key:** the API key as described on the web interface when you registered to Clan of the Cloud
+- **API Secret:** same as API key, but second part of the identifier.
+- **Environment:** CotC comes with two environments: a "production" environment and a "sandbox" environment. During the game development and testing phase, you will use the sandbox environment, and then switch to the production environment when releasing the game to the public. It brings improved reliability and performance and allows to start out with fresh data for your customers.
+- **Verbose logging:** outputs detailed information about all web requests made to the servers. Allows for finer debugging but is not recommended outside of alpha state as it may pollute the log.
+- **Request timeout:** the timeout for web requests (in seconds).
+- **HTTP client:** by default, CotC uses the standard HTTP client supplied with Mono (since the WWW client lacks required functionality). It works well and is supported on all platforms (except the web player), although it has a few quirks. Typically on some platforms it only supports basic security (HTTPS), and on iOS warnings will be issued in the console. On the other hand, the UnityWebRequest client is all new, doesn't have this problems but is only supported on most platforms since Unity 5.3, and doesn't support Keep-Alive yet, reducing the performance when making frequent calls to the server.
+
 # Usage {#cotcgameobject_ref}
 
-Basic usage is provided by the Clan of the Cloud SDK prefab object. You just have to put it on your scene and invoke the GetCloud method on it to fetch a #CotcSdk.Cloud object allowing to use most features. For that, you may simply use [FindObjectOfType<CotcGameObject>](http://docs.unity3d.com/ScriptReference/Object.FindObjectOfType.html).
+Functionality is provided through the Clan of the Cloud SDK prefab object, that should be present on every scene. It is not visible, therefore the position does not matter. Invoke the GetCloud method on it to fetch a #CotcSdk.Cloud object allowing to use most features. For that, you may simply use [FindObjectOfType<CotcGameObject>](http://docs.unity3d.com/ScriptReference/Object.FindObjectOfType.html).
 
 ~~~~{.cs}
 using CotcSdk;
@@ -54,6 +68,9 @@ Another very important object is the #CotcSdk.Gamer object. This represents a si
 		Debug.Log("Signed in successfully (ID = " + gamer.GamerId + ")");	});
 	});
 ~~~~
+
+Please read the section after promises for information about anonymous login, and what to set up next once logged in.
+
 
 # Promises {#promises_ref}
 
@@ -180,6 +197,58 @@ The exceptions provided by the API in Catch blocks are always of type `CotcExcep
 	});
 ~~~~
 
+# Login basics and Domain Event Loops
+
+Logging in anonymously allows the current user to get access to the CotC functionality without providing any credential, as typically happens the first time. The constructed #CotcSdk.Gamer object will contain credentials (GamerId, GamerSecret) which allow to log the gamer back using the #CotcSdk.Cloud.Login call. Thus, we recommend you to log in anonymously the first time, and then store the credentials, via `PlayerPrefs` for example.
+
+~~~~{.cs}
+	// First time
+	if (!PlayerPrefs.HasKey("GamerId") || !PlayerPrefs.HasKey("GamerSecret")) {
+		Cloud.LoginAnonymously()
+		.Catch(ex => Debug.LogError("Login failed: " + ex.ToString()))
+		.Done(gamer => {
+			// Persist returned credentials for next time
+			PlayerPrefs.SetString("GamerId", gamer.GamerId);
+			PlayerPrefs.SetString("GamerSecret", gamer.GamerSecret);
+			DidLogin(gamer);
+		});
+	}
+	else {
+		// Anonymous network type allows to log back with existing credentials
+		Cloud.Login(
+			network: LoginNetwork.Anonymous,
+			networkId: PlayerPrefs.GetString("GamerId"),
+			networkSecret: PlayerPrefs.GetString("GamerSecret"))
+		.Catch(ex => Debug.LogError("Login failed: " + ex.ToString()))
+		.Done(gamer => {
+			// ... (logged in)
+			DidLogin(gamer);
+		});
+	}
+~~~~
+
+Once logged in, you should also start a domain event loop, which consists of a background network thread to receive network events (messages from other gamers, match events, etc.). You will also likely attach a delegate to the #CotcSdk.DomainEventLoop.ReceivedEvent event, raised when an event is received (such as @ref CotcSdk.GamerCommunity.SendEvent "a message from another player").
+
+~~~~
+	// (Class member)
+	DomainEventLoop Loop = null;
+
+	void DidLogin(Gamer newGamer) {
+		// Another loop was running; unless you want to keep multiple users active, stop the previous
+		if (Loop != null)
+			Loop.Stop();
+
+		Loop = newGamer.StartEventLoop();
+		Loop.ReceivedEvent += Loop_ReceivedEvent;
+	}
+
+	void Loop_ReceivedEvent(DomainEventLoop sender, EventLoopArgs e) {
+		Debug.Log("Received event of type " + e.Message.Type + ": " + e.Message.ToJson());
+	}
+~~~~
+
+Since you may log in as many times as you want, what really makes a gamer "active" is the fact that an event loop is running for him. If you want to dismiss (log out) a gamer, you can simply stop the loop and drop your reference to the gamer object.
+
 # Network error handlers
 
 In case a network error happens, the request is not retried by default. But there is a `HttpRequestFailedHandler` member on Cloud which can be set to an user defined callback. This callback tells what to do with the error (retry it, cancel it). The following code retries any failed request twice, once after 100ms, once after 5s, then aborts it.
@@ -202,3 +271,4 @@ This should be done at the very startup, after the cloud has been received. The 
 # Bundle
 
 Some function calls use bundles. They act as a generic, typed dictionary. Read more at #CotcSdk.Bundle.
+

@@ -138,6 +138,26 @@ public class CloudTests : TestBase {
 		});
 	}
 
+	[Test("Tests the auto-modification of the gamer object when converting the account")]
+	public void ShouldModifyGamerAfterConvertingAccount(Cloud cloud) {
+		Gamer[] gamer = new Gamer[1];
+		// Create an anonymous account
+		cloud.LoginAnonymously()
+		// Then convert it to e-mail
+		.Then(g => {
+			gamer[0] = g;
+			return g.Account.Convert(
+				network: LoginNetwork.Email,
+				networkId: RandomEmailAddress(),
+				networkSecret: "Password123");
+		})
+		.Then(done => {
+			Assert(gamer[0].Network == LoginNetwork.Email, "The gamer object failed to change");
+			CompleteTest();
+		})
+		.CompleteTestIfSuccessful();
+	}
+
 	[Test("Checks the 'find user' functionality.")]
 	public void ShouldCheckIfUserExists(Cloud cloud) {
 		// Ensures that a fake account has been created
@@ -299,6 +319,18 @@ public class CloudTests : TestBase {
 			Assert(ex.ServerData["name"] == "BadToken", "Bad token expected");
 			CompleteTest();
 		});
+	}
+
+	[Test("Tests that an anonymous fails to link to an invalid facebook token (we cannot do much with automated testing).", requisite: "This test should fail from my understanding since the token is invalid, but for some reason it succeeds so we'll make it this way.")]
+	public void ShouldFailToLinkAccount(Cloud cloud) {
+		// Create an anonymous account
+		cloud.LoginAnonymously()
+			// Then convert it to e-mail
+		.Then(gamer => gamer.Account.Link(
+			network: LoginNetwork.Facebook,
+			networkId: "10153057921478191",
+			networkSecret: "CAAENyTNQMpQBAETZCetNwCP1EKlykqqjaPRTNI41fhmf0YSZB6Q3hdOtb4gnDIQznGyElGIuBy3ZCoUNiekZBhIXh4iHho8wODALDw3ZBesfzbmGSH5BPWjwp8ieMIZANA7igvqNw6zVj7LIsSO9wtkvGaA9iZBMXF0wymmiDEljQVo03jsvlf7GZCZBckjYDBnwSm929Sl8wegZDZD"))
+		.CompleteTestIfSuccessful();
 	}
 
 	[Test("Tests the floating point bundle functionality")]

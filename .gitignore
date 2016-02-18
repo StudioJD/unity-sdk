@@ -10,3 +10,5 @@
 *.userprefs
 *.pidb
 *.booproj
+*.dll
+*.meta
